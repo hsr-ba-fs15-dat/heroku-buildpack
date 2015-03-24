@@ -169,6 +169,22 @@ source $BIN_DIR/steps/cryptography
 # Numpy/scipy support
 source $BIN_DIR/steps/numpy-scipy
 
+# GeoDjango support. (GEOS, GDAL)
+# See [`bin/steps/geos`](geos.html).
+# See [`bin/steps/gdal`](gdal.html).
+bpwatch start geodjango_install
+  source $BIN_DIR/steps/geos
+  source $BIN_DIR/steps/gdal
+bpwatch stop geodjango_install
+
+set-env GEOS_LIBRARY_PATH $GEOS_LIBRARY_PATH
+set-env GDAL_LIBRARY_PATH $GDAL_LIBRARY_PATH
+set-env CPPPATH '/app/.geodjango/gdal/include:$CPPPATH'
+set-env CPATH '/app/.geodjango/gdal/include:$CPATH'
+set-env LIBRARY_PATH '/app/.geodjango/gdal/lib:$LIBRARY_PATH'
+set-env LD_LIBRARY_PATH '/app/.geodjango/gdal/lib:/app/.geodjango/geos/lib:$LD_LIBRARY_PATH'
+set-env PATH '/app/.geodjango/gdal/bin:$PATH'
+
 # Install dependencies with Pip.
 sub-env $BIN_DIR/steps/pip-install
 
