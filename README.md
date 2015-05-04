@@ -1,6 +1,9 @@
-Heroku buildpack: Python, Numpy, and Scipy
+Heroku buildpack: Python, Numpy, Scipy, GDAL and GEOS
 ====================================================
 
+Based on https://github.com/thenovices/heroku-buildpack-scipy and https://github.com/dulaccc/heroku-buildpack-geodjango/ and slightly modified build order/settings of environment vars in order to be able to compile packages that require GDAL during installation with pip (e.g. fiona)
+
+-------
 This is a custom [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks)
 for Python apps that use NumPy and/or SciPy, powered by [pip](http://www.pip-installer.org/).
 
