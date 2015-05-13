@@ -1,36 +1,57 @@
 #!/usr/bin/env bash
 
-# This script serves as the GDAL build step of the
-# [**GeoDjango Buildpack**](https://github.com/dulaccc/heroku-buildpack-geodjango)
-# compiler.
-#
-# A [buildpack](http://devcenter.heroku.com/articles/buildpacks) is an
-# adapter between a Python application and Heroku's runtime.
-#
-# This script is invoked by [`bin/compile`](/).
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
 
-# The location of the pre-compiled libmemcached binary.
-VENDORED_GDAL="https://s3.amazonaws.com/cirheroku/gdal-1.8.1-heroku.tar.gz"
+function vendor() {
+  binary="$1"
+  path="$2"
 
-# Syntax sugar.
-source $BIN_DIR/utils
+  echo "Fetching $binary" | indent
+  mkdir -p $path
+  curl -L $binary -s -o - | tar xz -C $path -f -
 
-puts-step "Checking for GDAL"
+  [ -d "$path/bin" ] && export PATH=$path/bin:$PATH
+  export CPPPATH="$path/include:$CPPPATH"
+  export CPATH="$path/include:$CPATH"
+  export LIBRARY_PATH="$path/lib:$LIBRARY_PATH"
+  export LD_LIBRARY_PATH="$path/lib:$LD_LIBRARY_PATH"
+  [ -d "$path/lib/pkgconfig" ] && export PKG_CONFIG_PATH="$path/lib/pkgconfig:$PKG_CONFIG_PATH"
 
-if [ ! -d $CACHE_DIR/gdal ]; then
-  # Download and extract gdal into target vendor directory.
-  echo "Fetching and installing GDAL 1.8.1" | indent
-  curl -s -L -o tmp-gdal.tar.gz $VENDORED_GDAL
-  echo "Caching ..." | indent
-  tar -zxvf tmp-gdal.tar.gz >/dev/null
-  rm tmp-gdal.tar.gz
-  mv gdal $CACHE_DIR
-fi
+  true
+}
 
-mkdir -p $BUILD_DIR/.geodjango
-cp -R $CACHE_DIR/gdal $BUILD_DIR/.geodjango
-echo "Installed" | indent
+echo "-----> Vendoring binaries"
+vendor "https://www.dropbox.com/s/wpemkwdv3diyuuc/gdal-1.11.1-1.tar.gz?dl=1" "$BUILD_DIR/vendor/gdal"
+vendor "https://www.dropbox.com/s/z7st5fv4yfn37tt/proj-4.8.0-1.tar.gz?dl=1"  "$BUILD_DIR/vendor/proj"
 
-# make the lib path accessible
-export GDAL_LIBRARY_PATH=$BUILD_DIR/.geodjango/gdal/lib/libgdal.so
-echo "GDAL installed and accessible with env variable 'GDAL_LIBRARY_PATH'" | indent
+
+
+echo "-----> Configuring build environment"
+
+cat <<EOF > $ROOT_DIR/export
+export PATH="$PATH:\$PATH"
+export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="\$LIBRARY_PATH:$LIBRARY_PATH"
+export PKG_CONFIG_PATH="\$PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
+export CPPPATH="\$CPPPATH:$CPPPATH"
+export CPATH="\$CPATH:$CPATH"
+export GDAL_DATA="$BUILD_DIR/vendor/gdal/share/gdal"
+EOF
+
+echo "-----> Building runtime environment"
+mkdir -p $BUILD_DIR/.profile.d
+
+cat <<EOF > $BUILD_DIR/.profile.d/gdal.sh
+export PATH="${PATH//$BUILD_DIR//app}:\$PATH"
+export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:${LD_LIBRARY_PATH//$BUILD_DIR//app}"
+export LIBRARY_PATH="\$LIBRARY_PATH:${LIBRARY_PATH//$BUILD_DIR//app}"
+export PKG_CONFIG_PATH="\$PKG_CONFIG_PATH:${PKG_CONFIG_PATH//$BUILD_DIR//app}"
+export CPPPATH="\$CPPPATH:${CPPPATH//$BUILD_DIR//app}"
+export CPATH="\$CPATH:${CPATH//$BUILD_DIR//app}"
+EOF
