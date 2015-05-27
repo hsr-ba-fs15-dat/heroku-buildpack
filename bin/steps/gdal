@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+source $BIN_DIR/utils
+
+
 function indent() {
   c='s/^/       /'
   case $(uname) in
@@ -47,12 +50,21 @@ EOF
 echo "-----> Building runtime environment"
 mkdir -p $BUILD_DIR/.profile.d
 
-cat <<EOF > $BUILD_DIR/.profile.d/gdal.sh
-export PATH="${PATH//$BUILD_DIR//app}:\$PATH"
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH//$BUILD_DIR//app}:\$LD_LIBRARY_PATH"
-export LIBRARY_PATH="${LIBRARY_PATH//$BUILD_DIR//app}:\$LIBRARY_PATH"
-export PKG_CONFIG_PATH="${PKG_CONFIG_PATH//$BUILD_DIR//app}:\$PKG_CONFIG_PATH"
-export CPPPATH="${CPPPATH//$BUILD_DIR//app}:\$CPPPATH"
-export CPATH="${CPATH//$BUILD_DIR//app}:\$CPATH"
-export GDAL_DATA="$BUILD_DIR/vendor/gdal/share/gdal"
-EOF
+
+# cat <<EOF > $BUILD_DIR/.profile.d/gdal.sh
+# export PATH="${PATH//$BUILD_DIR//app}:\$PATH"
+# export LD_LIBRARY_PATH="${LD_LIBRARY_PATH//$BUILD_DIR//app}:\$LD_LIBRARY_PATH"
+# export LIBRARY_PATH="${LIBRARY_PATH//$BUILD_DIR//app}:\$LIBRARY_PATH"
+# export PKG_CONFIG_PATH="${PKG_CONFIG_PATH//$BUILD_DIR//app}:\$PKG_CONFIG_PATH"
+# export CPPPATH="${CPPPATH//$BUILD_DIR//app}:\$CPPPATH"
+# export CPATH="${CPATH//$BUILD_DIR//app}:\$CPATH"
+# export GDAL_DATA="$BUILD_DIR/vendor/gdal/share/gdal"
+# EOF
+
+set-env PATH "${PATH//$BUILD_DIR//app}:\$PATH"
+set-env LD_LIBRARY_PATH "${LD_LIBRARY_PATH//$BUILD_DIR//app}:\$LD_LIBRARY_PATH"
+set-env LIBRARY_PATH "${LIBRARY_PATH//$BUILD_DIR//app}:\$LIBRARY_PATH"
+set-env PKG_CONFIG_PATH "${PKG_CONFIG_PATH//$BUILD_DIR//app}:\$PKG_CONFIG_PATH"
+set-env CPPPATH "${CPPPATH//$BUILD_DIR//app}:\$CPPPATH"
+set-env CPATH "${CPATH//$BUILD_DIR//app}:\$CPATH"
+set-env GDAL_DATA "$BUILD_DIR/vendor/gdal/share/gdal"
